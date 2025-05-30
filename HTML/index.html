@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>我的博客</title>
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- 引入vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- 引入JS -->
+    <script src="../JS/main.js" defer></script>
+
+</head>
+
+<body id="app">
+    <header>
+        <h1>欢迎来到我的博客</h1>
+    </header>
+
+    <button @click="toggleTheme">{{change?"白色":"黑色"}}主题</button>
+
+
+    <nav>
+        <a href="index.html">首页</a>
+        <a href="about.html">关于我</a>
+    </nav>
+
+    <main>
+        <article>
+            <h2><a href="article/01_article.html">将进酒</a></h2>
+            <p>君不见黄河之水天上来，奔流到海不复回。</p>
+        </article>
+
+        <article>
+            <h2>第二篇文章标题</h2>
+            <p>这是另一篇文章的摘要……</p>
+        </article>
+
+        <!-- Vue 留言板组件 -->
+        <h2>留言板</h2>
+        <input v-model="newMessage" @keyup.enter="appear" placeholder="写点什么..." />
+        <button @click="appear">提交</button>
+        <ol>
+            <li v-for="(message, index) in messages" :key="message.id">
+                {{ message.content }}
+                <button @click="deleteMessage(index)">删除</button>
+            </li>
+        </ol>
+
+
+
+
+
+
+    </main>
+
+
+
+</body>
+
+</html>
