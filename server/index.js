@@ -55,16 +55,12 @@ app.listen(PORT, () => {
 
 
 
-
-
-
 const path = require("path");
 
 // 托管静态资源（调整路径为你的前端文件存放目录）
-app.use(express.static(path.join(__dirname, "../HTML"))); // 托管整个 HTML 目录
-app.use(express.static(path.join(__dirname, "../")));     // 托管项目根目录（可选）
+app.use(express.static(path.join(__dirname, "../client"))); 
 
 // 根路由处理器
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../HTML/index.html'));
+    res.sendFile(path.join(__dirname, '../client/HTML/index.html'));
 });
