@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>将进酒</title>
+    <!-- GitHub 风格样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
+    <!-- 引入vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style_article.css">
+    <script src="/JS/main.js" defer></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .markdown-body {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<!-- 记得要挂载id -->
+
+<body id="app">
+
+    <header>
+        <h1>我的个人博客</h1>
+    </header>
+    <button @click="toggleTheme">{{change?"白色":"黑色"}}主题</button>
+    <nav>
+        <a href="../index.html">首页</a>
+        <a href="../about.html">关于我</a>
+    </nav>
+
+    <div id="content" class="markdown-body">
+        正在加载文章...
+    </div>
+    <!-- 引入 marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // 获取 URL 中的参数，比如 ?name=01 表示加载 01.md
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get("name") || "01";  // 默认加载 01.md
+        const mdPath = `/article/${name}.md`;
+
+        fetch(mdPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('文章加载失败');
+                }
+                return response.text();
+            })
+            .then(markdown => {
+                document.getElementById('content').innerHTML = marked.parse(markdown);
+            })
+            .catch(err => {
+                document.getElementById('content').innerHTML = `<p style="color:red;">${err.message}</p>`;
+            });
+    </script>
+
+
+    <main class="comment-container">
+        <h2>留言板</h2>
+
+        <!-- 输入新留言 -->
+        <div class="comment-input">
+            <input v-model="newMessage" @keyup.enter="appear" placeholder="写点什么..." />
+            <button @click="appear">提交</button>
+        </div>
+
+        <!-- 留言列表 -->
+        <ol class="comment-list">
+            <li v-for="(message, index) in messages" :key="message._id" class="comment-item">
+                <div class="comment-main">
+                    <span>{{ message.content }}</span>
+
+                    <!-- 右下角 ⋯ 按钮 -->
+                    <!-- ⋯ 菜单触发 + 弹窗 -->
+                    <div class="comment-actions">
+                        <span class="menu-trigger">⋯</span>
+                        <div class="menu-popup"> <!-- 不再用 v-if 控制 -->
+                            <button @click="likeMessage(index)">👍 {{ message.likes }}</button>
+                            <button @click="setReplyTo(index)">💬 回复</button>
+                            <button @click="deleteMessage(index)">🗑 删除</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 子评论列表 -->
+                <ul class="reply-list">
+                    <li v-for="(reply, rIndex) in message.replies" :key="rIndex" class="reply-item">
+                        <strong>{{ reply.username }}</strong>: {{ reply.content }}
+                    </li>
+                </ul>
+
+                <!-- 回复输入框 -->
+                <div v-if="replyToIndex === index" class="reply-input">
+                    <input v-model="replyContent" placeholder="回复..." @keyup.enter="submitReply(index)" />
+                    <button @click="submitReply(index)">发送</button>
+                </div>
+            </li>
+        </ol>
+    </main>
+
+
+
+</body>
+
+</html>

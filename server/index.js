@@ -15,19 +15,37 @@ mongoose.connect('mongodb://127.0.0.1:27017/blog-messages', {
 
 // 定义 Schema 和 Model
 const messageSchema = new mongoose.Schema({
-    content: String
+    content: String,
+    parentId: { type: mongoose.Schema.Types.ObjectId, default: null }, // 父评论ID
+    likes: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now }
 });
+
 const Message = mongoose.model('Message', messageSchema);
 
-// 获取所有留言
+// 获取评论树
 app.get('/messages', async (req, res) => {
-    const messages = await Message.find();
-    res.json(messages);
+    const flatMessages = await Message.find().sort({ createdAt: 1 });
+
+    const map = {};
+    flatMessages.forEach(msg => map[msg._id] = { ...msg.toObject(), replies: [] });
+
+    const tree = [];
+    flatMessages.forEach(msg => {
+        if (msg.parentId) {
+            map[msg.parentId]?.replies.push(map[msg._id]);
+        } else {
+            tree.push(map[msg._id]);
+        }
+    });
+
+    res.json(tree);
 });
 
-// 新建留言
+// 添加评论或子评论
 app.post('/messages', async (req, res) => {
-    const message = new Message({ content: req.body.content });
+    const { content, parentId } = req.body;
+    const message = new Message({ content, parentId: parentId || null });
     await message.save();
     res.json(message);
 });
@@ -45,6 +63,17 @@ app.delete('/messages/:id', async (req, res) => {
     }
 });
 
+// 点赞评论
+app.post('/messages/:id/like', async (req, res) => {
+    const message = await Message.findById(req.params.id);
+    if (!message) return res.status(404).json({ error: 'Not found' });
+
+    message.likes += 1;
+    await message.save();
+    res.json({ success: true, likes: message.likes });
+});
+
+
 // 启动服务器
 const PORT = 3000;
 app.listen(PORT, () => {
@@ -57,10 +86,14 @@ app.listen(PORT, () => {
 
 const path = require("path");
 
-// 托管静态资源（调整路径为你的前端文件存放目录）
-app.use(express.static(path.join(__dirname, "../client"))); 
+// 挂载 HTML 目录为根目录
+app.use(express.static(path.join(__dirname, '../client/HTML')));
 
-// 根路由处理器
+// 挂载 CSS、JS 目录
+app.use('/CSS', express.static(path.join(__dirname, '../client/CSS')));
+app.use('/JS', express.static(path.join(__dirname, '../client/JS')));
+
+// 根路径返回 index.html（也可以省略）
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/HTML/index.html'));
 });
