@@ -16,26 +16,50 @@ mongoose.connect('mongodb://127.0.0.1:27017/blog-messages', {
 // 定义 Schema 和 Model
 const messageSchema = new mongoose.Schema({
     content: String,
+    articleId: String, // 👈 新增字段：文章标识
     parentId: { type: mongoose.Schema.Types.ObjectId, default: null }, // 父评论ID
     likes: { type: Number, default: 0 },
+    username: { type: String, default: "匿名用户" },
     createdAt: { type: Date, default: Date.now }
 });
 
 const Message = mongoose.model('Message', messageSchema);
 
 // 获取评论树
+// 获取评论树（按 articleId 过滤）
 app.get('/messages', async (req, res) => {
-    const flatMessages = await Message.find().sort({ createdAt: 1 });
+    const { articleId } = req.query;
 
+    // 如果没有 articleId，返回空数组（或者返回错误）
+    if (!articleId) {
+        return res.json([]);
+    }
+
+    // 只查询当前文章的评论
+    const flatMessages = await Message.find({ articleId }).sort({ createdAt: 1 });
+
+    // 构建评论树
     const map = {};
-    flatMessages.forEach(msg => map[msg._id] = { ...msg.toObject(), replies: [] });
+    flatMessages.forEach(msg => {
+        map[msg._id.toString()] = {
+            ...msg.toObject(),
+            username: msg.username || "匿名用户", // 确保 username 有值
+            replies: []
+        };
+    });
 
     const tree = [];
     flatMessages.forEach(msg => {
+        const id = msg._id.toString();
         if (msg.parentId) {
-            map[msg.parentId]?.replies.push(map[msg._id]);
+            const parentId = msg.parentId.toString();
+            if (map[parentId]) {
+                map[parentId].replies.push(map[id]);
+            } else {
+                tree.push(map[id]); // 父级丢失，作为顶层评论
+            }
         } else {
-            tree.push(map[msg._id]);
+            tree.push(map[id]);
         }
     });
 
@@ -44,11 +68,12 @@ app.get('/messages', async (req, res) => {
 
 // 添加评论或子评论
 app.post('/messages', async (req, res) => {
-    const { content, parentId } = req.body;
-    const message = new Message({ content, parentId: parentId || null });
+    const { content, parentId, username, articleId } = req.body;
+    const message = new Message({ content, parentId: parentId || null, username: username || "匿名用户", articleId });
     await message.save();
     res.json(message);
 });
+
 
 // 删除留言
 app.delete('/messages/:id', async (req, res) => {

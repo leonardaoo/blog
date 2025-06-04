@@ -82,7 +82,8 @@
         <ol class="comment-list">
             <li v-for="(message, index) in messages" :key="message._id" class="comment-item">
                 <div class="comment-main">
-                    <span>{{ message.content }}</span>
+                    <p><strong>{{ message.username }}</strong>: {{ message.content }}</p>
+
 
                     <!-- 右下角 ⋯ 按钮 -->
                     <!-- ⋯ 菜单触发 + 弹窗 -->
