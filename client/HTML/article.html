@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>将进酒</title>
+    <title>加载中...</title>
     <!-- GitHub 风格样式 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
     <!-- 引入vue -->
@@ -34,7 +34,7 @@
 <body id="app">
 
     <header>
-        <h1>我的个人博客</h1>
+        <h1>{{ articleId }}</h1>
     </header>
     <button @click="toggleTheme">{{change?"白色":"黑色"}}主题</button>
     <nav>
@@ -51,7 +51,7 @@
         // 获取 URL 中的参数，比如 ?name=01 表示加载 01.md
         const params = new URLSearchParams(window.location.search);
         const name = params.get("name") || "01";  // 默认加载 01.md
-        const mdPath = `/article/${name}.md`;
+        const mdPath = `/diary/${name}.md`;
 
         fetch(mdPath)
             .then(response => {
@@ -62,10 +62,12 @@
             })
             .then(markdown => {
                 document.getElementById('content').innerHTML = marked.parse(markdown);
+
             })
             .catch(err => {
                 document.getElementById('content').innerHTML = `<p style="color:red;">${err.message}</p>`;
             });
+            
     </script>
 
 

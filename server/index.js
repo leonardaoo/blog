@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+
 
 // 初始化 express 应用
 const app = express();
@@ -98,6 +100,23 @@ app.post('/messages/:id/like', async (req, res) => {
     res.json({ success: true, likes: message.likes });
 });
 
+// 👉 新增 API: 获取 /dairy 目录下所有 .md 文件名（不含 .md 后缀）
+app.get('/api/list-diaries', (req, res) => {
+    const diaryDir = path.join(__dirname, '../../diary'); // 路径指向最外层 dairy 文件夹
+    fs.readdir(diaryDir, (err, files) => {
+        if (err) return res.status(500).json({ error: '读取失败' });
+
+        const mdFiles = files
+            .filter(file => file.endsWith('.md'))
+            .map(file => file.replace('.md', ''))
+            .sort()
+            .reverse(); // 日期从新到旧
+
+        res.json(mdFiles);
+    });
+});
+
+
 
 // 启动服务器
 const PORT = 3000;
@@ -117,7 +136,10 @@ app.use(express.static(path.join(__dirname, '../client/HTML')));
 // 挂载 CSS、JS 目录
 app.use('/CSS', express.static(path.join(__dirname, '../client/CSS')));
 app.use('/JS', express.static(path.join(__dirname, '../client/JS')));
-
+// ✅ 允许访问 files 文件夹
+app.use('/files', express.static(path.join(__dirname, '../files')));
+// 公开日记文件夹作为静态资源
+app.use('/diary', express.static(path.join(__dirname, '../../diary')));
 // 根路径返回 index.html（也可以省略）
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/HTML/index.html'));

@@ -91,8 +91,28 @@ createApp({
 
     mounted() {
         const params = new URLSearchParams(window.location.search);
-        this.articleId = params.get("name"); // 确保 URL 是 ?name=01_将进酒
-        console.log("Current articleId:", this.articleId); // 调试
+        this.articleId = params.get("name") || "未命名文章"; // 默认值
+        document.title = `${this.articleId} - 我的个人博客`;
+
+        // 加载文件时检查是否存在
+        fetch(`/diary/${this.articleId}.md`)
+            .then(response => {
+                if (!response.ok) {
+                    document.title = "我的个人博客"; // 回退到默认标题
+                    throw new Error('文件不存在');
+                }
+                return response.text();
+            })
+            .then(markdown => {
+                document.getElementById('content').innerHTML = marked.parse(markdown);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('content').innerHTML = `
+              <p class="error">文章加载失败，请检查链接是否正确</p>
+            `;
+            });
+
         this.fetchMessages();
     }
     
