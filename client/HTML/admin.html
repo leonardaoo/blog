@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>文章管理</title>
+    <!-- 引入vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style_article.css">
+    <script src="/JS/admin.js" defer></script>
+</head>
+
+<body id="app">
+    <header>
+        <h1>文章管理</h1>
+        <button @click="newArticle">新建文章</button>
+    </header>
+
+    <nav>
+        <a href="index.html">返回首页</a>
+    </nav>
+
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>分类</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="article in articles" :key="article._id">
+                    <td>{{ article.title }}</td>
+                    <td>{{ article.category }}</td>
+                    <td>{{ article.published ? '已发布' : '草稿' }}</td>
+                    <td>
+                        <button @click="editArticle(article._id)">编辑</button>
+                        <button @click="togglePublish(article)">
+                            {{ article.published ? '取消发布' : '发布' }}
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+
+</html>

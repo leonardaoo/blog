@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const fs = require('fs');
+// 示例一个假的 ObjectId 字符串，长度24位十六进制
+const fakeAuthorId = new mongoose.Types.ObjectId();
+
 
 
 // 初始化 express 应用
@@ -26,6 +29,19 @@ const messageSchema = new mongoose.Schema({
 });
 
 const Message = mongoose.model('Message', messageSchema);
+
+// 新增文章模型
+const articleSchema = new mongoose.Schema({
+    title: String,
+    content: String,
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    category: String, // 如"日记"、"政治"等
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+    published: { type: Boolean, default: false }
+});
+
+const Article = mongoose.model('Article', articleSchema);
 
 // 获取评论树
 // 获取评论树（按 articleId 过滤）
@@ -117,6 +133,111 @@ app.get('/api/list-diaries', (req, res) => {
 });
 
 
+//添加在线编辑文章的API
+
+// 获取所有文章（管理用）
+app.get('/api/articles/all', async (req, res) => {
+    try {
+        const articles = await Article.find().sort({ createdAt: -1 });
+        res.json(articles);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+// 获取文章列表
+// 获取文章列表（支持按分类筛选）
+app.get('/api/articles', async (req, res) => {
+    const { category } = req.query;
+    const query = { published: true };
+    if (category) query.category = category;
+
+    const articles = await Article.find(query).sort({ createdAt: -1 });
+    res.json(articles);
+});
+
+// 获取单篇文章
+app.get('/api/articles/:id', async (req, res) => {
+    try {
+        // 检查是否是有效的ObjectId
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: 'Invalid article ID' });
+        }
+
+        const article = await Article.findById(req.params.id);
+        if (!article) return res.status(404).json({ error: 'Article not found' });
+        res.json(article);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// 创建或更新文章
+app.post('/api/articles', async (req, res) => {
+    const { id, title, content, category } = req.body;
+
+    try {
+        if (id) {
+            const article = await Article.findByIdAndUpdate(id, {
+                title,
+                content,
+                category,
+                updatedAt: Date.now()
+            }, { new: true });
+            res.json(article);
+        } else {
+            const article = new Article({
+                title,
+                content,
+                category,
+                author: fakeAuthorId // 用一个合法的 ObjectId 测试
+            });
+            await article.save();
+            res.json(article);
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+// 更新现有文章 - 新增这个路由
+app.put('/api/articles/:id', async (req, res) => {
+    try {
+        const { title, content, category, published } = req.body;
+
+        const article = await Article.findByIdAndUpdate(
+            req.params.id,
+            {
+                title,
+                content,
+                category,
+                published,
+                updatedAt: Date.now()
+            },
+            { new: true }
+        );
+
+        if (!article) {
+            return res.status(404).json({ error: '文章不存在' });
+        }
+
+        res.json(article);
+    } catch (error) {
+        console.error('更新文章失败:', error);
+        res.status(500).json({ error: '更新文章失败' });
+    }
+});
+
+// 发布/取消发布文章
+app.post('/api/articles/:id/publish', async (req, res) => {
+    const { published } = req.body;
+    const article = await Article.findByIdAndUpdate(
+        req.params.id,
+        { published },
+        { new: true }
+    );
+    res.json(article);
+});
 
 // 启动服务器
 const PORT = 3000;
@@ -125,7 +246,23 @@ app.listen(PORT, () => {
 });
 
 
+// 在index.js中添加
+async function initTestData() {
+    const count = await Article.countDocuments();
+    if (count === 0) {
+        await Article.create([
+            { title: "测试文章1", content: "这是第一篇测试文章", category: "日记", published: true },
+            { title: "测试文章2", content: "这是第二篇测试文章", category: "政治", published: false }
+        ]);
+        console.log("添加了测试文章");
+    }
+}
 
+// 在数据库连接后调用
+mongoose.connection.once('open', () => {
+    console.log('Connected to MongoDB');
+    initTestData();
+});
 
 
 const path = require("path");
@@ -140,6 +277,10 @@ app.use('/JS', express.static(path.join(__dirname, '../client/JS')));
 app.use('/files', express.static(path.join(__dirname, '../files')));
 // 公开日记文件夹作为静态资源
 app.use('/diary', express.static(path.join(__dirname, '../../diary')));
+
+
+
+
 // 根路径返回 index.html（也可以省略）
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/HTML/index.html'));

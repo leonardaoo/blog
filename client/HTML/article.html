@@ -12,64 +12,172 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/style_article.css">
     <script src="/JS/main.js" defer></script>
+
+    <!-- 引入 Vditor -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.9.7/dist/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vditor@3.9.7/dist/index.min.js"></script>
+
     <style>
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
+        /* 在 article.html 的 <style> 标签中替换或添加以下样式 */
+
+        .editor-container {
+            width: 90%;
+            /* 使用百分比宽度 */
+            max-width: none;
+            /* 移除最大宽度限制 */
+            margin: 20px auto;
+            /* 保持居中 */
+            background: white;
             padding: 20px;
+            border-radius: 10px;
+            box-sizing: border-box;
+            /* 确保padding包含在宽度内 */
         }
 
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .editor-container {
+                width: 95%;
+                padding: 15px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .editor-container {
+                width: 85%;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .editor-container {
+                width: 80%;
+            }
+        }
+
+        /* 输入框样式调整 */
+        .editor-container input,
+        .editor-container select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        /* Vditor 编辑器容器调整 */
+        #vditor {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        /* 调整 markdown-body 也使其响应式 */
         .markdown-body {
             background-color: #fff;
             padding: 40px;
             border-radius: 10px;
-            max-width: 800px;
-            margin: 0 auto;
+            width: 90%;
+            /* 改为百分比 */
+            max-width: none;
+            /* 移除最大宽度限制 */
+            margin: 20px auto;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .markdown-body {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .markdown-body {
+                width: 85%;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .markdown-body {
+                width: 80%;
+            }
+        }
+
+        /* 文章控制按钮区域也做响应式调整 */
+        .article-controls {
+            text-align: center;
+            margin: 20px auto;
+            width: 90%;
+            max-width: none;
+        }
+
+        @media (max-width: 768px) {
+            .article-controls {
+                width: 95%;
+            }
+
+            .article-controls button {
+                margin: 5px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .article-controls {
+                width: 85%;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .article-controls {
+                width: 80%;
+            }
         }
     </style>
 </head>
-<!-- 记得要挂载id -->
 
 <body id="app">
-
     <header>
-        <h1>{{ articleId }}</h1>
+        <h1>{{ currentArticleTitle || '加载中...' }}</h1>
     </header>
+
     <button @click="toggleTheme">{{change?"白色":"黑色"}}主题</button>
+
     <nav>
         <a href="../index.html">首页</a>
         <a href="../about.html">关于我</a>
+        <a href="admin.html">管理文章</a>
     </nav>
 
-    <div id="content" class="markdown-body">
+    <!-- 文章控制按钮 -->
+    <div class="article-controls" v-if="articleId">
+        <button v-if="!isEditing" @click="enterEditMode" class="edit-btn">📝 编辑文章</button>
+        <button v-if="isEditing" @click="cancelEdit" class="cancel-btn">❌ 取消编辑</button>
+        <button v-if="isEditing" @click="saveArticle" class="save-btn">💾 保存</button>
+        <button v-if="isEditing && editingArticle._id && !editingArticle.published" @click="publishArticle"
+            class="publish-btn">📢 发布</button>
+        <button v-if="isEditing && editingArticle._id && editingArticle.published" @click="unpublishArticle"
+            class="unpublish-btn">📝 取消发布</button>
+    </div>
+
+    <!-- 文章显示区域（非编辑模式） -->
+    <div v-if="!isEditing && articleId" id="content" class="markdown-body">
         正在加载文章...
     </div>
-    <!-- 引入 marked.js -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        // 获取 URL 中的参数，比如 ?name=01 表示加载 01.md
-        const params = new URLSearchParams(window.location.search);
-        const name = params.get("name") || "01";  // 默认加载 01.md
-        const mdPath = `/diary/${name}.md`;
 
-        fetch(mdPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('文章加载失败');
-                }
-                return response.text();
-            })
-            .then(markdown => {
-                document.getElementById('content').innerHTML = marked.parse(markdown);
-
-            })
-            .catch(err => {
-                document.getElementById('content').innerHTML = `<p style="color:red;">${err.message}</p>`;
-            });
-            
-    </script>
-
+    <!-- 编辑器界面（编辑模式） -->
+    <div v-if="isEditing" class="editor-container">
+        <input v-model="editingArticle.title" placeholder="标题">
+        <select v-model="editingArticle.category">
+            <option value="日记">日记</option>
+            <option value="政治">政治</option>
+            <option value="成长">成长</option>
+            <option value="笔记">笔记</option>
+        </select>
+        <div id="vditor"></div>
+    </div>
 
     <main class="comment-container">
         <h2>留言板</h2>
@@ -86,18 +194,15 @@
                 <div class="comment-main">
                     <p><strong>{{ message.username }}</strong>: {{ message.content }}</p>
 
-
                     <!-- 右下角 ⋯ 按钮 -->
-                    <!-- ⋯ 菜单触发 + 弹窗 -->
                     <div class="comment-actions">
                         <span class="menu-trigger">⋯</span>
-                        <div class="menu-popup"> <!-- 不再用 v-if 控制 -->
+                        <div class="menu-popup">
                             <button @click="likeMessage(index)">👍 {{ message.likes }}</button>
                             <button @click="setReplyTo(index)">💬 回复</button>
                             <button @click="deleteMessage(index)">🗑 删除</button>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- 子评论列表 -->
@@ -115,8 +220,6 @@
             </li>
         </ol>
     </main>
-
-
 
 </body>
 
