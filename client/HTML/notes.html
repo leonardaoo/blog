@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>我的博客</title>
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="/CSS/style.css">
+    <link rel="stylesheet" href="/CSS/style_journal.css">
+    <!-- 引入vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body id="app">
+    <header>
+        <h1>欢迎来到我的博客</h1>
+    </header>
+    <!-- 变换主题 -->
+    <div class="theme-toggle-container">
+        <button @click="toggleTheme" class="theme-toggle-btn">
+            <span class="theme-icon sun-icon">☀️</span>
+            <span class="theme-icon moon-icon">🌙</span>
+        </button>
+    </div>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html">首页</a>
+            <a href="journal.html">日记</a>
+            <a href="politics.html">政治</a>
+            <a href="growth.html">成长</a>
+            <a href="notes.html">笔记</a>
+        </div>
+    </nav>
+
+    <div class="journal-container">
+        <div class="journal-header">
+            <h2>笔记</h2>
+            <button @click="createNewArticle" class="new-article-btn">
+                新建文章
+            </button>
+        </div>
+
+        <div v-if="articles.length === 0" class="empty-state">
+            <h3>还没有文章</h3>
+            <p>点击上方按钮开始写你的第一篇文章吧！</p>
+        </div>
+
+        <div v-for="article in articles" :key="article._id" class="article-card">
+            <a :href="`/article.html?id=${article._id}`" class="article-title">
+                {{ article.title }}
+            </a>
+
+            <div class="article-meta">
+                <div class="article-info">
+                    <span>{{ formatDate(article.createdAt) }}</span>
+                    <span class="status-badge" :class="article.published ? 'status-published' : 'status-draft'">
+                        {{ article.published ? '已发布' : '草稿' }}
+                    </span>
+                </div>
+
+                <div class="article-actions">
+                    <button @click="editArticle(article._id)" class="action-btn edit-btn">
+                        ✏️ 编辑
+                    </button>
+                    <button v-if="!article.published" @click="publishArticle(article)" class="action-btn publish-btn">
+                        📢 发布
+                    </button>
+                    <button v-if="article.published" @click="unpublishArticle(article)"
+                        class="action-btn unpublish-btn">
+                        📝 取消发布
+                    </button>
+                    <button @click="deleteArticle(article)" class="action-btn delete-btn">
+                        🗑️ 删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // 在 journal.html 的 <script> 标签中，修改以下部分：
+
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                articles: [],
+                change: false,
+                currentCategory: '笔记' // 固定当前页面的分类
+            };
+        },
+        methods: {
+            // 获取文章列表 - 只获取当前分类的文章
+            async fetchArticles() {
+                try {
+                    const response = await axios.get(`/api/articles/all?category=${this.currentCategory}`);
+                    this.articles = response.data;
+                    console.log(`获取到的${this.currentCategory}文章:`, this.articles);
+                } catch (error) {
+                    console.error('获取文章列表失败:', error);
+                }
+            },
+
+            createNewArticle() {
+                // 新建文章时传递当前分类
+                window.location.href = `/article.html?edit=true&category=${this.currentCategory}`;
+            },
+
+            editArticle(id) {
+                window.location.href = `/article.html?id=${id}&edit=true`;
+            },
+
+            async publishArticle(article) {
+                try {
+                    const response = await axios.post(`/api/articles/${article._id}/publish`, {
+                        published: true
+                    });
+                    article.published = response.data.published;
+                    console.log('发布成功');
+                } catch (error) {
+                    console.error('发布失败:', error);
+                    alert('发布失败，请重试');
+                }
+            },
+
+            async unpublishArticle(article) {
+                try {
+                    const response = await axios.post(`/api/articles/${article._id}/publish`, {
+                        published: false
+                    });
+                    article.published = response.data.published;
+                    console.log('取消发布成功');
+                } catch (error) {
+                    console.error('取消发布失败:', error);
+                    alert('取消发布失败，请重试');
+                }
+            },
+
+            async deleteArticle(article) {
+                const userConfirmed = window.confirm(`确定要删除文章"${article.title}"吗？此操作不可恢复。`);
+                if (!userConfirmed) {
+                    return;
+                }
+
+                try {
+                    console.log('正在删除文章:', article._id);
+                    const deleteUrl = `/api/articles/${article._id}`;
+                    const response = await axios.delete(deleteUrl);
+                    console.log('删除响应:', response.data);
+
+                    // 从本地数组中移除
+                    const index = this.articles.findIndex(a => a._id === article._id);
+                    if (index > -1) {
+                        this.articles.splice(index, 1);
+                    }
+
+                    alert('文章删除成功！');
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    let errorMessage = '删除失败: ';
+                    if (error.response) {
+                        errorMessage += error.response.data?.error || error.response.statusText || '未知错误';
+                    } else if (error.request) {
+                        errorMessage += '网络请求失败，请检查服务器是否运行';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    alert(errorMessage);
+                }
+            },
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            },
+
+            toggleTheme() {
+                this.change = !this.change;
+                document.body.classList.toggle("dark");
+            }
+        },
+
+        mounted() {
+            // 恢复主题状态
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                this.change = true;
+                document.body.classList.add('dark');
+            } else {
+                this.change = false;
+                document.body.classList.remove('dark');
+            }
+
+            // 获取文章列表
+            this.fetchArticles();
+        }
+    }).mount('#app');
+    </script>
+</body>
+
+</html>

@@ -16,296 +16,6 @@
     <!-- 引入 Vditor -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.9.7/dist/index.css" />
     <script src="https://cdn.jsdelivr.net/npm/vditor@3.9.7/dist/index.min.js"></script>
-
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-
-        /* 主要内容区域布局 */
-        .article-wrapper {
-            display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
-            gap: 30px;
-            position: relative;
-        }
-
-        /* 文章内容区域 */
-        .article-content {
-            flex: 1;
-            min-width: 0;
-            /* 防止内容溢出 */
-        }
-
-        .markdown-body {
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 10px;
-            line-height: 1.8;
-        }
-
-        /* 大纲侧边栏 */
-        .outline-sidebar {
-            width: 250px;
-            flex-shrink: 0;
-            position: sticky;
-            top: 20px;
-            height: fit-content;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-        }
-
-        .outline-container {
-            background: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #007bff;
-        }
-
-        .outline-header {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .outline-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .outline-item {
-            margin: 0;
-            padding: 0;
-        }
-
-        .outline-link {
-            display: block;
-            padding: 8px 12px;
-            text-decoration: none;
-            color: #666;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            line-height: 1.4;
-            border-left: 3px solid transparent;
-        }
-
-        .outline-link:hover {
-            background-color: #f8f9fa;
-            color: #007bff;
-            transform: translateX(5px);
-        }
-
-        .outline-link.active {
-            background-color: #e3f2fd;
-            color: #1976d2;
-            border-left-color: #1976d2;
-            font-weight: 500;
-        }
-
-        /* 根据标题级别调整样式 */
-        .outline-link[data-level="1"] {
-            font-weight: 600;
-            font-size: 15px;
-        }
-
-        .outline-link[data-level="2"] {
-            font-size: 14px;
-        }
-
-        .outline-link[data-level="3"] {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .outline-link[data-level="4"],
-        .outline-link[data-level="5"],
-        .outline-link[data-level="6"] {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            .article-wrapper {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .outline-sidebar {
-                width: 100%;
-                position: static;
-                order: -1;
-                /* 在移动端将大纲放在文章上方 */
-            }
-
-            .outline-container {
-                max-height: 200px;
-                overflow-y: auto;
-            }
-        }
-
-        .article-controls {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .article-controls button {
-            margin: 0 10px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .edit-btn {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .edit-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .cancel-btn {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .cancel-btn:hover {
-            background-color: #545b62;
-        }
-
-        .save-btn {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .save-btn:hover {
-            background-color: #1e7e34;
-        }
-
-        .publish-btn {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .publish-btn:hover {
-            background-color: #117a8b;
-        }
-
-        .unpublish-btn {
-            background-color: #ffc107;
-            color: #212529;
-        }
-
-        .unpublish-btn:hover {
-            background-color: #e0a800;
-        }
-
-        .save-publish-btn {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .save-publish-btn:hover {
-            background-color: #1e7e34;
-        }
-
-        .editor-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .editor-container input,
-        .editor-container select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        /* Vditor 编辑器样式 */
-        #vditor {
-            margin-top: 15px;
-        }
-
-        /* 深色主题适配 */
-        body.dark .outline-container {
-            background: #2d3748;
-            border-left-color: #4299e1;
-        }
-
-        body.dark .outline-header {
-            color: #e2e8f0;
-            border-bottom-color: #4a5568;
-        }
-
-        body.dark .outline-link {
-            color: #a0aec0;
-        }
-
-        body.dark .outline-link:hover {
-            background-color: #4a5568;
-            color: #4299e1;
-        }
-
-        body.dark .outline-link.active {
-            background-color: #2d3748;
-            color: #4299e1;
-            border-left-color: #4299e1;
-        }
-
-        /* 标题样式增强 */
-        .markdown-body h1,
-        .markdown-body h2,
-        .markdown-body h3,
-        .markdown-body h4,
-        .markdown-body h5,
-        .markdown-body h6 {
-            scroll-margin-top: 100px;
-            /* 滚动时的上边距 */
-            position: relative;
-        }
-
-        /* 标题锚点指示器 */
-        .markdown-body h1:target,
-        .markdown-body h2:target,
-        .markdown-body h3:target,
-        .markdown-body h4:target,
-        .markdown-body h5:target,
-        .markdown-body h6:target {
-            background-color: #fff3cd;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            transition: background-color 2s ease;
-        }
-
-        body.dark .markdown-body h1:target,
-        body.dark .markdown-body h2:target,
-        body.dark .markdown-body h3:target,
-        body.dark .markdown-body h4:target,
-        body.dark .markdown-body h5:target,
-        body.dark .markdown-body h6:target {
-            background-color: #4a5568;
-        }
-    </style>
 </head>
 
 <body id="app">
@@ -313,12 +23,22 @@
         <h1>{{ currentArticleTitle || '加载中...' }}</h1>
     </header>
 
-    <button @click="toggleTheme">{{change?"白色":"黑色"}}主题</button>
+    <!-- 变换主题 -->
+    <div class="theme-toggle-container">
+        <button @click="toggleTheme" class="theme-toggle-btn">
+            <span class="theme-icon sun-icon">☀️</span>
+            <span class="theme-icon moon-icon">🌙</span>
+        </button>
+    </div>
 
     <nav>
-        <a href="../index.html">首页</a>
-        <a href="../about.html">关于我</a>
-        <a href="journal.html">日记</a>
+        <div class="nav-container">
+            <a href="index.html">首页</a>
+            <a href="journal.html">日记</a>
+            <a href="politics.html">政治</a>
+            <a href="growth.html">成长</a>
+            <a href="notes.html">笔记</a>
+        </div>
     </nav>
 
     <!-- 文章控制按钮 -->
@@ -418,6 +138,7 @@
             </li>
         </ol>
     </main>
+
 
 </body>
 

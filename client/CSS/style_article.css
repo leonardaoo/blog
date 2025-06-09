@@ -1,124 +1,520 @@
-/* 所有文章的标题（h2）样式 */
-article h2 {
-    text-align: center;
-    font-size: 28px;
-    color: #4a2f2f;
-    margin-bottom: 10px;
-}
-
-/* 所有段落（p）样式 */
-article p {
-    text-align: center;
-    font-size: 20px;
-    color: #333;
-    margin: 5px 0;
-    line-height: 1.8;
-}
 
 
 /* 评论区 */
 
+/* 评论区 - 现代化设计 */
 .comment-container {
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
+.comment-container h2 {
+    color: #2d3748;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* 评论输入区域 */
 .comment-input {
     display: flex;
-    gap: 6px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 1.5rem;
 }
 
 .comment-input input {
     flex: 1;
-    padding: 8px;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+}
+
+.comment-input input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .comment-input button {
-    padding: 8px 12px;
+    padding: 0 1.5rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
+.comment-input button:hover {
+    background: #4338ca;
+}
+
+/* 评论列表 */
 .comment-list {
     list-style: none;
     padding: 0;
-    margin-top: 20px;
+    margin: 0;
 }
 
 .comment-item {
     position: relative;
-    border-bottom: 1px solid #ccc;
-    padding: 10px 0;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
 }
 
 .comment-main {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 10px;
 }
 
-
-
-.comment-actions span {
-    cursor: pointer;
-    font-weight: bold;
-    padding: 0 6px;
-}
-
-
-
-.reply-list {
-    list-style: none;
-    padding-left: 20px;
-    margin-top: 6px;
-}
-
-.reply-item {
-    font-size: 14px;
-    color: #555;
-}
-
-.reply-input {
-    display: flex;
-    gap: 6px;
-    margin-left: 20px;
-    margin-top: 10px;
-}
-
-.reply-input input {
+.comment-main p {
+    margin: 0;
     flex: 1;
-    padding: 6px;
+    line-height: 1.5;
+    color: #2d3748;
 }
 
-.reply-input button {
-    margin-left: 5px;
-    padding: 6px 10px;
+.comment-main strong {
+    color: #1e293b;
+    font-weight: 600;
 }
 
-/* 右下角三个点 */
-
+/* 评论操作按钮 */
 .comment-actions {
     position: relative;
-    display: inline-block;
+}
+
+.menu-trigger {
+    cursor: pointer;
+    color: #64748b;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.menu-trigger:hover {
+    background: #f1f5f9;
+    color: #475569;
 }
 
 .menu-popup {
     display: none;
     position: absolute;
-    top: 20px;
+    top: 100%;
     right: 0;
+    min-width: 140px;
     background: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem 0;
     z-index: 10;
+    border: 1px solid #e2e8f0;
 }
 
 .comment-actions:hover .menu-popup {
     display: block;
 }
 
-.menu-trigger {
+.menu-popup button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    color: #475569;
     cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.1s ease;
+}
+
+.menu-popup button:hover {
+    background: #f8fafc;
+    color: #4f46e5;
+}
+
+/* 回复列表 */
+.reply-list {
+    list-style: none;
+    padding-left: 2rem;
+    margin-top: 0.75rem;
+    position: relative;
+}
+
+.reply-list::before {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.reply-item {
+    font-size: 0.9rem;
+    color: #475569;
+    padding: 0.5rem 0;
+    position: relative;
+    line-height: 1.5;
+}
+
+.reply-item strong {
+    color: #334155;
+    font-weight: 500;
+}
+
+/* 回复输入框 */
+.reply-input {
+    display: flex;
+    gap: 10px;
+    margin-left: 2rem;
+    margin-top: 0.75rem;
+}
+
+.reply-input input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.reply-input input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.reply-input button {
+    padding: 0 1rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reply-input button:hover {
+    background: #4338ca;
+}
+
+
+
+
+
+/* 原来在article.html的 */
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+/* 主要内容区域布局 */
+.article-wrapper {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 30px;
+    position: relative;
+}
+
+/* 文章内容区域 */
+.article-content {
+    flex: 1;
+    min-width: 0;
+    /* 防止内容溢出 */
+}
+
+.markdown-body {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    line-height: 1.8;
+}
+
+/* 大纲侧边栏 */
+.outline-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+.outline-container {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #007bff;
+}
+
+.outline-header {
+    font-size: 16px;
     font-weight: bold;
-    padding: 0 6px;
+    margin-bottom: 15px;
+    color: #333;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.outline-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.outline-item {
+    margin: 0;
+    padding: 0;
+}
+
+.outline-link {
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #666;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    line-height: 1.4;
+    border-left: 3px solid transparent;
+}
+
+.outline-link:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+    transform: translateX(5px);
+}
+
+.outline-link.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-left-color: #1976d2;
+    font-weight: 500;
+}
+
+/* 根据标题级别调整样式 */
+.outline-link[data-level="1"] {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.outline-link[data-level="2"] {
+    font-size: 14px;
+}
+
+.outline-link[data-level="3"] {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.outline-link[data-level="4"],
+.outline-link[data-level="5"],
+.outline-link[data-level="6"] {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .article-wrapper {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .outline-sidebar {
+        width: 100%;
+        position: static;
+        order: -1;
+        /* 在移动端将大纲放在文章上方 */
+    }
+
+    .outline-container {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+}
+
+.article-controls {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.article-controls button {
+    margin: 0 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #545b62;
+}
+
+.save-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #1e7e34;
+}
+
+.publish-btn {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.publish-btn:hover {
+    background-color: #117a8b;
+}
+
+.unpublish-btn {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.unpublish-btn:hover {
+    background-color: #e0a800;
+}
+
+.save-publish-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-publish-btn:hover {
+    background-color: #1e7e34;
+}
+
+.editor-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.editor-container input,
+.editor-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Vditor 编辑器样式 */
+#vditor {
+    margin-top: 15px;
+}
+
+/* 深色主题适配 */
+body.dark .outline-container {
+    background: #2d3748;
+    border-left-color: #4299e1;
+}
+
+body.dark .outline-header {
+    color: #e2e8f0;
+    border-bottom-color: #4a5568;
+}
+
+body.dark .outline-link {
+    color: #a0aec0;
+}
+
+body.dark .outline-link:hover {
+    background-color: #4a5568;
+    color: #4299e1;
+}
+
+body.dark .outline-link.active {
+    background-color: #2d3748;
+    color: #4299e1;
+    border-left-color: #4299e1;
+}
+
+/* 标题样式增强 */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+    scroll-margin-top: 100px;
+    /* 滚动时的上边距 */
+    position: relative;
+}
+
+/* 标题锚点指示器 */
+.markdown-body h1:target,
+.markdown-body h2:target,
+.markdown-body h3:target,
+.markdown-body h4:target,
+.markdown-body h5:target,
+.markdown-body h6:target {
+    background-color: #fff3cd;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    transition: background-color 2s ease;
+}
+
+body.dark .markdown-body h1:target,
+body.dark .markdown-body h2:target,
+body.dark .markdown-body h3:target,
+body.dark .markdown-body h4:target,
+body.dark .markdown-body h5:target,
+body.dark .markdown-body h6:target {
+    background-color: #4a5568;
 }

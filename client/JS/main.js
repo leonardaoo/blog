@@ -54,9 +54,6 @@ createApp({
         },
 
         // 取消编辑
-        // 取消编辑
-        // 取消编辑
-        // 优化后的 cancelEdit 方法
         cancelEdit() {
             if (confirm('确定要取消编辑吗？未保存的更改将丢失。')) {
                 this.isEditing = false;
@@ -85,7 +82,6 @@ createApp({
         },
 
         // 显示文章内容
-        // 显示文章内容
         async displayArticleContent() {
             if (!this.originalArticleData) {
                 // 如果没有原始数据，重新获取
@@ -95,16 +91,39 @@ createApp({
 
             const contentEl = document.getElementById('content');
             if (contentEl) {
-                // 关键修改：await Vditor.md2html 的结果
-                const htmlContent = await Vditor.md2html(this.originalArticleData.content || '');
-                contentEl.innerHTML = htmlContent;
+                try {
+                    // 确保 Vditor 已加载
+                    if (typeof Vditor !== 'undefined' && Vditor.md2html) {
+                        const htmlContent = await Vditor.md2html(this.originalArticleData.content || '');
+                        contentEl.innerHTML = htmlContent;
+
+                        // 等待DOM更新后再生成大纲
+                        this.$nextTick(() => {
+                            const outline = this.generateOutline();
+                            this.renderOutline(outline);
+                            this.initScrollSpy();
+                        });
+                    } else {
+                        contentEl.innerHTML = '<p>正在加载编辑器...</p>';
+                    }
+                } catch (error) {
+                    console.error('渲染内容失败:', error);
+                    contentEl.innerHTML = '<p class="error">内容渲染失败</p>';
+                }
             }
         },
+
         // 初始化编辑器
         initVditor() {
             if (this.vditor) {
                 this.vditor.destroy();
                 this.vditor = null;
+            }
+
+            // 确保 Vditor 已加载
+            if (typeof Vditor === 'undefined') {
+                console.error('Vditor 未加载');
+                return;
             }
 
             this.vditor = new Vditor('vditor', {
@@ -180,8 +199,24 @@ createApp({
 
                 const contentEl = document.getElementById('content');
                 if (contentEl) {
-                    const htmlContent = await Vditor.md2html(article.content || '');
-                    contentEl.innerHTML = htmlContent;
+                    try {
+                        if (typeof Vditor !== 'undefined' && Vditor.md2html) {
+                            const htmlContent = await Vditor.md2html(article.content || '');
+                            contentEl.innerHTML = htmlContent;
+
+                            // 等待DOM更新后再生成大纲
+                            this.$nextTick(() => {
+                                const outline = this.generateOutline();
+                                this.renderOutline(outline);
+                                this.initScrollSpy();
+                            });
+                        } else {
+                            contentEl.innerHTML = '<p>正在加载编辑器...</p>';
+                        }
+                    } catch (error) {
+                        console.error('渲染内容失败:', error);
+                        contentEl.innerHTML = '<p class="error">内容渲染失败</p>';
+                    }
                 }
 
             } catch (error) {
@@ -324,11 +359,8 @@ createApp({
             }
         },
 
-
-        // 在 main.js 中添加以下方法
-
         // 生成文章大纲
-        generateOutline(htmlContent) {
+        generateOutline() {
             // 直接操作页面上的标题元素，而不是解析的DOM片段
             const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
 
@@ -352,7 +384,7 @@ createApp({
             return outline;
         },
 
-        // 修改后的 renderOutline 方法
+        // 渲染大纲
         renderOutline(outline) {
             const outlineContainer = document.getElementById('outline-container');
             const outlineSidebar = document.querySelector('.outline-sidebar');
@@ -392,6 +424,21 @@ createApp({
             this.addOutlineClickHandlers();
         },
 
+        // 添加大纲点击事件处理
+        addOutlineClickHandlers() {
+            const outlineLinks = document.querySelectorAll('.outline-link');
+            outlineLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').slice(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        },
+
         // 高亮当前标题
         highlightCurrentHeading(activeId) {
             // 移除所有活跃状态
@@ -411,7 +458,7 @@ createApp({
             let ticking = false;
 
             const updateActiveHeading = () => {
-                const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
                 let activeHeading = null;
@@ -441,62 +488,6 @@ createApp({
 
             window.addEventListener('scroll', onScroll);
         },
-
-        // 修复后的 displayArticleContent 方法
-        async displayArticleContent() {
-            if (!this.originalArticleData) {
-                await this.fetchArticleContent();
-                return;
-            }
-
-            const contentEl = document.getElementById('content');
-            if (contentEl) {
-                // 修复：使用 this.originalArticleData 而不是 article
-                const htmlContent = await Vditor.md2html(this.originalArticleData.content || '');
-                contentEl.innerHTML = htmlContent;
-
-                // 等待DOM更新后再生成大纲
-                this.$nextTick(() => {
-                    const outline = this.generateOutline();
-                    this.renderOutline(outline);
-                    this.initScrollSpy();
-                });
-            }
-        },
-
-        // 修复后的 fetchArticleContent 方法
-        async fetchArticleContent() {
-            try {
-                const response = await axios.get(`/api/articles/${this.articleId}`);
-                const article = response.data;
-
-                document.title = article.title;
-                this.currentArticleTitle = article.title;
-                this.originalArticleData = { ...article };
-
-                const contentEl = document.getElementById('content');
-                if (contentEl) {
-                    const htmlContent = await Vditor.md2html(article.content || '');
-                    contentEl.innerHTML = htmlContent;
-
-                    // 等待DOM更新后再生成大纲
-                    this.$nextTick(() => {
-                        const outline = this.generateOutline();
-                        this.renderOutline(outline);
-                        this.initScrollSpy();
-                    });
-                }
-
-            } catch (error) {
-                console.error('加载文章失败:', error);
-                this.currentArticleTitle = '文章加载失败';
-                const contentEl = document.getElementById('content');
-                if (contentEl) {
-                    contentEl.innerHTML = '<p class="error">文章加载失败</p>';
-                }
-            }
-        },
-
 
         // 获取评论
         async fetchMessages() {
@@ -591,6 +582,9 @@ createApp({
         toggleTheme() {
             this.change = !this.change;
             document.body.classList.toggle("dark");
+
+            // 保存主题状态到 localStorage
+            localStorage.setItem('theme', this.change ? 'dark' : 'light');
         }
     },
 
@@ -601,6 +595,16 @@ createApp({
     },
 
     mounted() {
+        // 恢复主题状态
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            this.change = true;
+            document.body.classList.add('dark');
+        } else {
+            this.change = false;
+            document.body.classList.remove('dark');
+        }
+
         const params = new URLSearchParams(window.location.search);
         this.articleId = params.get("id") || params.get("name") || null;
         this.isEditing = params.get('edit') === 'true';
@@ -639,5 +643,4 @@ createApp({
             this.fetchMessages();
         }
     }
-
 }).mount('#app');

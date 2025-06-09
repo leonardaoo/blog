@@ -16,40 +16,49 @@
 </head>
 
 <body id="app">
+    
     <header>
         <h1>欢迎来到我的博客</h1>
     </header>
     <!-- 变换主题 -->
-    <button @click="toggleTheme">{{change?"白色":"黑色"}}主题</button>
+    <div class="theme-toggle-container">
+        <button @click="toggleTheme" class="theme-toggle-btn">
+            <span class="theme-icon sun-icon">☀️</span>
+            <span class="theme-icon moon-icon">🌙</span>
+        </button>
+    </div>
 
 
     <nav>
-        <a href="index.html">首页</a>
-        <a href="about.html">关于我</a>
-        <a href="journal.html">日记</a>
+        <div class="nav-container">
+            <a href="index.html">首页</a>
+            <a href="journal.html">日记</a>
+            <a href="politics.html">政治</a>
+            <a href="growth.html">成长</a>
+            <a href="notes.html">笔记</a>
+        </div>
+
     </nav>
 
     <main>
         <article>
-            <h2><a href="/journal.html">日记</a></h2>
-        </article>
-        <!--         <article>
-            <h2><a href="/article.html?name=02_行路难">政治</a></h2>
+            <h2  class="page-title"><a href="/journal.html">日记</a></h2>
         </article>
 
         <article>
-            <h2><a href="/article.html?name=02_行路难">成长</a></h2>
+            <h2 class="page-title"><a href="/politics.html">政治</a></h2>
         </article>
 
         <article>
-            <h2><a href="/article.html?name=02_行路难">笔记</a></h2>
-        </article> -->
+            <h2 class="page-title"><a href="/growth.html">成长</a></h2>
+        </article>
 
-
+        <article>
+            <h2 class="page-title"><a href="/notes.html">笔记</a></h2>
+        </article>
     </main>
 
-
-
+    
 </body>
 
 </html>

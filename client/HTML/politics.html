@@ -17,7 +17,6 @@
         <h1>欢迎来到我的博客</h1>
     </header>
     <!-- 变换主题 -->
-    <!-- 变换主题 -->
     <div class="theme-toggle-container">
         <button @click="toggleTheme" class="theme-toggle-btn">
             <span class="theme-icon sun-icon">☀️</span>
@@ -37,7 +36,7 @@
 
     <div class="journal-container">
         <div class="journal-header">
-            <h2>日记</h2>
+            <h2>政治</h2>
             <button @click="createNewArticle" class="new-article-btn">
                 新建文章
             </button>
@@ -90,7 +89,7 @@
                     return {
                         articles: [],
                         change: false,
-                        currentCategory: '日记' // 固定当前页面的分类
+                        currentCategory: '政治' // 固定当前页面的分类
                     };
                 },
                 methods: {
