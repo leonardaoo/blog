@@ -392,3 +392,29 @@ article:nth-child(2) {
 article:nth-child(3) {
     animation-delay: 0.2s;
 }
+
+
+a {
+    color: var(--text-primary);
+}
+
+nav a {
+    color: var(--text-primary);
+}
+
+article a {
+    color: var(--text-primary);
+}
+
+a {
+    text-decoration: none;
+}
+
+/* 牛逼!important */
+.journal-header h2 {
+    color: var(--text-primary) !important;
+}
+
+.new-article-btn  {
+
+}

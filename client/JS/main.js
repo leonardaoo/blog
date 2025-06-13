@@ -1,13 +1,23 @@
 const { createApp } = Vue;
 
-createApp({
+// 创建 Vue 应用实例
+const vueApp = createApp({
     data() {
         return {
+            // 文章相关
+            articles: [],
+            currentCategory: '', // 当前页面分类，由具体页面设置
+
+            // 评论相关
             newMessage: '',
             messages: [],
             replyToIndex: null,
-            change: false,
             replyContent: '',
+
+            // 主题相关
+            change: false,
+
+            // 文章详情页相关
             articleId: '',
             currentArticleTitle: '',
             isEditing: false,
@@ -23,6 +33,101 @@ createApp({
         };
     },
     methods: {
+        // ==================== 文章列表相关方法 ====================
+
+        // 获取文章列表 - 只获取当前分类的文章
+        async fetchArticles() {
+            if (!this.currentCategory) return;
+
+            try {
+                console.log('获取文章列表，分类:', this.currentCategory);
+                const response = await axios.get(`/api/articles/all?category=${this.currentCategory}`);
+                this.articles = response.data;
+                console.log(`获取到的${this.currentCategory}文章:`, this.articles);
+            } catch (error) {
+                console.error('获取文章列表失败:', error);
+            }
+        },
+
+        createNewArticle() {
+            // 新建文章时传递当前分类
+            window.location.href = `/article.html?edit=true&category=${this.currentCategory}`;
+        },
+
+        editArticle(id) {
+            window.location.href = `/article.html?id=${id}&edit=true`;
+        },
+
+        async publishArticle(article) {
+            try {
+                const response = await axios.post(`/api/articles/${article._id}/publish`, {
+                    published: true
+                });
+                article.published = response.data.published;
+                console.log('发布成功');
+            } catch (error) {
+                console.error('发布失败:', error);
+                alert('发布失败，请重试');
+            }
+        },
+
+        async unpublishArticle(article) {
+            try {
+                const response = await axios.post(`/api/articles/${article._id}/publish`, {
+                    published: false
+                });
+                article.published = response.data.published;
+                console.log('取消发布成功');
+            } catch (error) {
+                console.error('取消发布失败:', error);
+                alert('取消发布失败，请重试');
+            }
+        },
+
+        async deleteArticle(article) {
+            const userConfirmed = window.confirm(`确定要删除文章"${article.title}"吗？此操作不可恢复。`);
+            if (!userConfirmed) {
+                return;
+            }
+
+            try {
+                console.log('正在删除文章:', article._id);
+                const deleteUrl = `/api/articles/${article._id}`;
+                const response = await axios.delete(deleteUrl);
+                console.log('删除响应:', response.data);
+
+                // 从本地数组中移除
+                const index = this.articles.findIndex(a => a._id === article._id);
+                if (index > -1) {
+                    this.articles.splice(index, 1);
+                }
+
+                alert('文章删除成功！');
+            } catch (error) {
+                console.error('删除失败:', error);
+                let errorMessage = '删除失败: ';
+                if (error.response) {
+                    errorMessage += error.response.data?.error || error.response.statusText || '未知错误';
+                } else if (error.request) {
+                    errorMessage += '网络请求失败，请检查服务器是否运行';
+                } else {
+                    errorMessage += error.message;
+                }
+                alert(errorMessage);
+            }
+        },
+
+        formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        },
+
+        // ==================== 文章编辑相关方法 ====================
+
         // 进入编辑模式
         async enterEditMode() {
             if (!this.articleId) return;
@@ -84,32 +189,21 @@ createApp({
         // 显示文章内容
         async displayArticleContent() {
             if (!this.originalArticleData) {
-                // 如果没有原始数据，重新获取
                 await this.fetchArticleContent();
                 return;
             }
 
             const contentEl = document.getElementById('content');
             if (contentEl) {
-                try {
-                    // 确保 Vditor 已加载
-                    if (typeof Vditor !== 'undefined' && Vditor.md2html) {
-                        const htmlContent = await Vditor.md2html(this.originalArticleData.content || '');
-                        contentEl.innerHTML = htmlContent;
+                const htmlContent = await Vditor.md2html(this.originalArticleData.content || '');
+                contentEl.innerHTML = htmlContent;
 
-                        // 等待DOM更新后再生成大纲
-                        this.$nextTick(() => {
-                            const outline = this.generateOutline();
-                            this.renderOutline(outline);
-                            this.initScrollSpy();
-                        });
-                    } else {
-                        contentEl.innerHTML = '<p>正在加载编辑器...</p>';
-                    }
-                } catch (error) {
-                    console.error('渲染内容失败:', error);
-                    contentEl.innerHTML = '<p class="error">内容渲染失败</p>';
-                }
+                // 等待DOM更新后再生成大纲
+                this.$nextTick(() => {
+                    const outline = this.generateOutline();
+                    this.renderOutline(outline);
+                    this.initScrollSpy();
+                });
             }
         },
 
@@ -118,12 +212,6 @@ createApp({
             if (this.vditor) {
                 this.vditor.destroy();
                 this.vditor = null;
-            }
-
-            // 确保 Vditor 已加载
-            if (typeof Vditor === 'undefined') {
-                console.error('Vditor 未加载');
-                return;
             }
 
             this.vditor = new Vditor('vditor', {
@@ -199,24 +287,15 @@ createApp({
 
                 const contentEl = document.getElementById('content');
                 if (contentEl) {
-                    try {
-                        if (typeof Vditor !== 'undefined' && Vditor.md2html) {
-                            const htmlContent = await Vditor.md2html(article.content || '');
-                            contentEl.innerHTML = htmlContent;
+                    const htmlContent = await Vditor.md2html(article.content || '');
+                    contentEl.innerHTML = htmlContent;
 
-                            // 等待DOM更新后再生成大纲
-                            this.$nextTick(() => {
-                                const outline = this.generateOutline();
-                                this.renderOutline(outline);
-                                this.initScrollSpy();
-                            });
-                        } else {
-                            contentEl.innerHTML = '<p>正在加载编辑器...</p>';
-                        }
-                    } catch (error) {
-                        console.error('渲染内容失败:', error);
-                        contentEl.innerHTML = '<p class="error">内容渲染失败</p>';
-                    }
+                    // 等待DOM更新后再生成大纲
+                    this.$nextTick(() => {
+                        const outline = this.generateOutline();
+                        this.renderOutline(outline);
+                        this.initScrollSpy();
+                    });
                 }
 
             } catch (error) {
@@ -359,9 +438,12 @@ createApp({
             }
         },
 
+        // ==================== 大纲相关方法 ====================
+
+        // ==================== 大纲相关方法 ====================
+
         // 生成文章大纲
-        generateOutline() {
-            // 直接操作页面上的标题元素，而不是解析的DOM片段
+        generateOutline(htmlContent) {
             const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
 
             const outline = [];
@@ -370,7 +452,6 @@ createApp({
                 const text = heading.textContent.trim();
                 const id = `heading-${index}`;
 
-                // 直接给页面上的标题元素添加ID
                 heading.id = id;
 
                 outline.push({
@@ -389,7 +470,6 @@ createApp({
             const outlineContainer = document.getElementById('outline-container');
             const outlineSidebar = document.querySelector('.outline-sidebar');
 
-            // 如果没有标题或只有一个标题，隐藏整个侧边栏
             if (!outline || outline.length <= 1) {
                 if (outlineSidebar) {
                     outlineSidebar.style.display = 'none';
@@ -397,7 +477,6 @@ createApp({
                 return;
             }
 
-            // 有多个标题时显示侧边栏
             if (outlineSidebar) {
                 outlineSidebar.style.display = 'block';
             }
@@ -407,7 +486,7 @@ createApp({
             let html = '<div class="outline-header">📋 文章目录</div><ul class="outline-list">';
 
             outline.forEach(item => {
-                const indent = (item.level - 1) * 20; // 每级缩进20px
+                const indent = (item.level - 1) * 20;
                 html += `
             <li class="outline-item" style="margin-left: ${indent}px;">
                 <a href="#${item.id}" class="outline-link" data-level="${item.level}">
@@ -420,33 +499,63 @@ createApp({
             html += '</ul>';
             outlineContainer.innerHTML = html;
 
-            // 添加点击事件
             this.addOutlineClickHandlers();
         },
 
         // 添加大纲点击事件处理
         addOutlineClickHandlers() {
-            const outlineLinks = document.querySelectorAll('.outline-link');
-            outlineLinks.forEach(link => {
+            document.querySelectorAll('.outline-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const targetId = link.getAttribute('href').slice(1);
+                    const targetId = link.getAttribute('href').substring(1);
                     const targetElement = document.getElementById(targetId);
+
                     if (targetElement) {
+                        // 立即设置高亮状态
+                        this.highlightCurrentHeading(targetId);
+
+                        // 设置标志，暂时禁用滚动监听
+                        this.isScrollingToTarget = true;
+
+                        // 滚动到目标位置
                         targetElement.scrollIntoView({ behavior: 'smooth' });
+
+                        // 监听滚动结束事件
+                        this.waitForScrollEnd(() => {
+                            this.isScrollingToTarget = false;
+                            // 滚动结束后再次确认高亮状态
+                            this.highlightCurrentHeading(targetId);
+                        });
                     }
                 });
             });
         },
 
+        // 等待滚动结束的辅助方法
+        waitForScrollEnd(callback) {
+            let scrollTimeout;
+            let lastScrollTop = window.pageYOffset;
+
+            const checkScrollEnd = () => {
+                const currentScrollTop = window.pageYOffset;
+                if (currentScrollTop === lastScrollTop) {
+                    callback();
+                } else {
+                    lastScrollTop = currentScrollTop;
+                    scrollTimeout = setTimeout(checkScrollEnd, 100);
+                }
+            };
+
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(checkScrollEnd, 100);
+        },
+
         // 高亮当前标题
         highlightCurrentHeading(activeId) {
-            // 移除所有活跃状态
             document.querySelectorAll('.outline-link').forEach(link => {
                 link.classList.remove('active');
             });
 
-            // 添加当前活跃状态
             const activeLink = document.querySelector(`a[href="#${activeId}"]`);
             if (activeLink) {
                 activeLink.classList.add('active');
@@ -455,22 +564,35 @@ createApp({
 
         // 监听滚动，自动高亮当前所在的标题
         initScrollSpy() {
+            // 初始化标志
+            this.isScrollingToTarget = false;
             let ticking = false;
 
             const updateActiveHeading = () => {
-                const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
+                // 如果正在执行点击跳转，跳过滚动监听更新
+                if (this.isScrollingToTarget) {
+                    ticking = false;
+                    return;
+                }
+
+                const headings = document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]');
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
                 let activeHeading = null;
 
+                // 改进算法：找到最接近当前视口顶部的标题
                 headings.forEach(heading => {
                     const rect = heading.getBoundingClientRect();
-                    const offsetTop = rect.top + scrollTop;
-
-                    if (offsetTop <= scrollTop + 100) { // 100px的偏移量
+                    // 使用更精确的判断条件
+                    if (rect.top <= 150) { // 给一些缓冲区域
                         activeHeading = heading;
                     }
                 });
+
+                // 如果没有找到合适的标题，使用第一个标题
+                if (!activeHeading && headings.length > 0) {
+                    activeHeading = headings[0];
+                }
 
                 if (activeHeading && activeHeading.id) {
                     this.highlightCurrentHeading(activeHeading.id);
@@ -487,7 +609,12 @@ createApp({
             };
 
             window.addEventListener('scroll', onScroll);
+
+            // 初始化时也执行一次
+            updateActiveHeading();
         },
+
+        // ==================== 评论相关方法 ====================
 
         // 获取评论
         async fetchMessages() {
@@ -578,12 +705,11 @@ createApp({
             });
         },
 
-        // 切换主题
+        // ==================== 主题切换 ====================
+
         toggleTheme() {
             this.change = !this.change;
             document.body.classList.toggle("dark");
-
-            // 保存主题状态到 localStorage
             localStorage.setItem('theme', this.change ? 'dark' : 'light');
         }
     },
@@ -605,42 +731,53 @@ createApp({
             document.body.classList.remove('dark');
         }
 
-        const params = new URLSearchParams(window.location.search);
-        this.articleId = params.get("id") || params.get("name") || null;
-        this.isEditing = params.get('edit') === 'true';
-        const defaultCategory = params.get('category') || '日记';
+        // 检查当前页面类型
+        const currentPath = window.location.pathname;
 
-        if (this.isEditing) {
-            if (this.articleId) {
-                // 编辑现有文章
-                this.loadArticleForEditing(this.articleId);
+        // 如果是文章详情页
+        if (currentPath.includes('article.html')) {
+            const params = new URLSearchParams(window.location.search);
+            this.articleId = params.get("id") || params.get("name") || null;
+            this.isEditing = params.get('edit') === 'true';
+            const defaultCategory = params.get('category') || '日记';
+
+            if (this.isEditing) {
+                if (this.articleId) {
+                    // 编辑现有文章
+                    this.loadArticleForEditing(this.articleId);
+                } else {
+                    // 创建新文章
+                    this.editingArticle = {
+                        title: '',
+                        content: '',
+                        category: defaultCategory,
+                        published: false
+                    };
+                    this.currentArticleTitle = '新文章';
+                    this.$nextTick(() => {
+                        this.initVditor();
+                    });
+                }
             } else {
-                // 创建新文章
-                this.editingArticle = {
-                    title: '',
-                    content: '',
-                    category: defaultCategory,
-                    published: false
-                };
-                this.currentArticleTitle = '新文章';
-                this.$nextTick(() => {
-                    this.initVditor();
-                });
-            }
-        } else {
-            if (this.articleId) {
-                this.fetchArticleContent();
-            } else {
-                const contentEl = document.getElementById('content');
-                if (contentEl) {
-                    contentEl.innerHTML = '<p class="error">未指定文章</p>';
+                if (this.articleId) {
+                    this.fetchArticleContent();
+                } else {
+                    const contentEl = document.getElementById('content');
+                    if (contentEl) {
+                        contentEl.innerHTML = '<p class="error">未指定文章</p>';
+                    }
                 }
             }
-        }
 
-        // 获取评论
-        if (this.articleId) {
-            this.fetchMessages();
+            // 获取评论
+            if (this.articleId) {
+                this.fetchMessages();
+            }
         }
+        // 其他页面由各自的初始化代码处理
     }
-}).mount('#app');
+});
+
+// 挂载应用并暴露给全局
+const app = vueApp.mount('#app');
+window.vueApp = app;
